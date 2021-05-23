@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even){ 
+
+  background-color: #dddddd;
+}
+h1{
+	text-align: center;
+	font-size: 40px;
+	font-family: cursive;
+	color: #000;
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 20px 0 50px;
+}
+h2{
+	text-align: center;
+	font-size: 30px;
+	font-family: cursive;
+	color: #fff;
+	font-weight: 700;
+	line-height: 1.2;
+	margin: 20px 0 50px;
+	padding:20px 0;
+	background-color: #008000;
+}
+button{
+	background-color: #34821f;
+    border: 2px solid #000;
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-family: cursive;
+    font-size: 15px;
+    line-height: 1.2;
+    color: #fff;
+    margin: 0 10px;
+    cursor: pointer;
+}
+.loader-sec{
+	display: block;
+	text-align: center;
+}
+.back-btn{
+	display: block;
+	text-align: right;
+}
+.back-btn{
+	margin-bottom:20px;
+}
+.getUserFromP{
+	text-align: center;
+}
+</style>
+<body ng-app="myApp" ng-controller="myCtrl">
+
+<div> 
+<h1>Welcome Everyone</h1>
+<h2 ng-if="showMsg" ng-bind="msg"></h2>
+
+</div>
+
+<div class="getUserFromP" ng-if="userList.length < 1">
+	<button ng-click="getUserFromPlaceholder()" ng-if="loader == false">
+		Import Users</button>
+	</button>
+	<button ng-click="getPostsAndCmtFromPlaceholder()" ng-if="loader == false">
+		Import Posts and comments</button>
+	</button>
+	<button ng-click="showUsers()" ng-if="loader == false">
+		show Users</button>
+	</button>
+	
+</div>
+<span class="loader-sec" ng-if="loader == true">
+		<img src="assets/images/loader2.gif">
+	</span>
+
+<div class="userList" ng-if="userList.length > 0 && viewType == 'users'">
+	<h2>User List</h2>
+    
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Username</th>
+    <th>Email</th>
+    <th>Update Pic</th>
+    <th>View Post</th>
+  </tr>
+  <tr ng-repeat=" user in userList">
+    <td>{{user.name}}</td>
+    <td>{{user.username}}</td>
+    <td>{{user.email}}</td>
+    <td>Update Pic</td>
+    <td><a href="javascript:void(0)" ng-click="viewPost(user.id)">View Posts</td>
+  </tr>
+  
+</table>
+</div>
+
+<div class="postList" ng-if="postList.length > 0 && viewType == 'posts'">
+	<h2>Post List</h2>
+	<span class="back-btn"><a href="javascript:void(0);" ng-click="goBack()">Go Back</a></span>
+
+<table>
+  <tr>
+  	<th>Title</th>
+    <th>Body</th>
+    <th>Comments</th>
+    
+  </tr>
+  <tr ng-repeat=" post in postList">
+    <td>{{post.title}}</td>
+    <td>{{post.body}}</td>
+    <td><a href="javascript:void(0);" ng-click="viewComments(post.comments)">{{post.comments.length}}</a></td>
+
+    
+  </tr>
+  
+</table>
+</div>
+
+<div class="commentList" ng-if="commentList.length > 0 && viewType == 'comments'">
+	<h2>Comments List</h2>
+	<span class="back-btn"><a href="javascript:void(0);" ng-click="goBack()">Go Back</a></span>
+
+<table>
+  <tr>
+  	<th>Name</th>
+    <th>Body</th>
+    
+    
+  </tr>
+  <tr ng-repeat=" comment in commentList">
+    <td>{{comment.name}}</td>
+    <td>{{comment.body}}</td>
+    
+
+    
+  </tr>
+  
+</table>
+</div>
+
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http,$timeout) {
+  $scope.userList = [];	
+  $scope.postList = [];
+  $scope.commentList = [];  
+  $scope.loader  = false;
+  $scope.showMsg  = false;
+  $scope.msg      = '';
+  $scope.viewType = '';
+  $scope.globalUrl = 'http://127.0.0.1:3000/'
+  $scope.getUserFromPlaceholder = function(){
+       $scope.userList = []; 
+       $scope.loader = true;
+  	  $http.get($scope.globalUrl+'fetchUserFromPlaceholder')
+     .then(function(response) {
+     	
+      $scope.showAlerts(response.data.msg);
+      $scope.loader = false;  
+      });
+  }
+
+  $scope.showUsers = function(){
+       $scope.userList = []; 
+       $scope.loader = true;
+       $scope.viewType = 'users';
+  	  $http.get($scope.globalUrl+'getAllUsers')
+     .then(function(response) {
+      $scope.userList =response.data.data;	
+      $scope.loader = false;  
+      });
+  }
+
+
+ 
+
+  $scope.viewPost = function(userId){
+    console.log(userId);
+    $scope.viewType = 'posts';
+    $scope.postList = [];
+    $scope.loader = true;
+  	$http.get($scope.globalUrl+'getAllPost/'+userId)
+     .then(function(response) {
+      $scope.postList =response.data.data;	
+      console.log($scope.postList);
+      $scope.loader = false;  
+      }); 
+  }
+
+  $scope.viewComments = function(comments){
+  	$scope.viewType = "comments";
+  	$scope.commentList = comments;
+  	console.log(comments);
+
+  }
+
+  $scope.goBack = function(){
+  	if($scope.viewType == 'posts'){
+  		$scope.viewType = 'users';
+  	}else if($scope.viewType == 'comments'){
+  		$scope.viewType = 'posts';
+  	}
+  }
+
+  $scope.getPostsAndCmtFromPlaceholder = function(){
+       $scope.userList = []; 
+       $scope.loader = true;
+  	  $http.get($scope.globalUrl+'fetchPostAndCommentsFromPlaceholder')
+     .then(function(response) {
+     	
+      $scope.showAlerts(response.data.msg);
+      $scope.loader = false;  
+      });
+  }
+
+
+  
+
+  $scope.showAlerts = function(msg){
+  	 $scope.showMsg  = true;
+     $scope.msg      = msg;
+     $timeout(()=>{
+     	$scope.showMsg  = false;
+        $scope.msg      = '';
+     },3000)
+
+  }
+});
+</script>
+
+</body>
+</html>
